@@ -25,6 +25,23 @@ declare global {
         get_version: () => Promise<string>
         ping: () => Promise<string>
         get_system_info: () => Promise<SystemInfo>
+
+        // 模块 A: 质量管理 API
+        run_static_analysis: () => Promise<StaticAnalysisResult>
+        scan_unit_tests: () => Promise<UnitTestScanResult>
+        run_unit_test: (testPath: string) => Promise<UnitTestResult>
+        get_code_metrics: () => Promise<CodeMetrics>
+
+        // 模块 B: 视觉测试 API
+        launch_target_app: () => Promise<AppLaunchResult>
+        close_target_app: () => Promise<ApiResult>
+        get_screen_frame: () => Promise<ScreenFrameResult>
+        get_window_info: () => Promise<WindowInfoResult>
+        focus_target_window: (windowTitle?: string) => Promise<ApiResult>
+        run_stress_test: (iterations: number) => Promise<StressTestResult>
+        execute_ai_command: (command: string) => Promise<AiCommandResult>
+        verify_visual_result: (pattern: string) => Promise<VisualVerifyResult>
+        set_deepseek_api_key: (apiKey: string) => Promise<ApiResult>
       }
     }
   }
@@ -43,6 +60,102 @@ export interface SystemInfo {
   platform_version: string
   python_version: string
   machine: string
+}
+
+// ==================== 测试平台类型定义 ====================
+
+export interface ApiResult {
+  success: boolean
+  error?: string
+  message?: string
+}
+
+export interface CodeIssue {
+  id: string
+  severity: string
+  message: string
+  verbose: string
+  file: string
+  line: number
+  column: number
+}
+
+export interface StaticAnalysisResult extends ApiResult {
+  total_issues?: number
+  issues?: CodeIssue[]
+  project_root?: string
+}
+
+export interface TestCase {
+  name: string
+  path: string
+  type: string
+}
+
+export interface UnitTestScanResult extends ApiResult {
+  total_tests?: number
+  tests?: TestCase[]
+}
+
+export interface TestCaseDetail {
+  name: string
+  status: string
+  message: string
+}
+
+export interface UnitTestResult extends ApiResult {
+  test_path?: string
+  total?: number
+  passed?: number
+  failed?: number
+  skipped?: number
+  cases?: TestCaseDetail[]
+}
+
+export interface CodeMetrics extends ApiResult {
+  total_files?: number
+  total_lines?: number
+  cpp_files?: number
+  header_files?: number
+  code_lines?: number
+  comment_lines?: number
+}
+
+export interface AppLaunchResult extends ApiResult {
+  pid?: number
+  path?: string
+}
+
+export interface ScreenFrameResult extends ApiResult {
+  image?: string
+  width?: number
+  height?: number
+}
+
+export interface WindowInfoResult extends ApiResult {
+  all_windows?: string[]
+  target_windows?: string[]
+}
+
+export interface StressTestResult extends ApiResult {
+  total_iterations?: number
+  successful?: number
+  failed?: number
+  logs?: string[]
+}
+
+export interface AiCommandResult extends ApiResult {
+  command?: string
+  ai_interpretation?: string
+  executed?: boolean
+  message?: string
+}
+
+export interface VisualVerifyResult extends ApiResult {
+  pattern?: string
+  edge_ratio?: number
+  verified?: boolean
+  message?: string
 }
 
 /**
@@ -95,9 +208,58 @@ export const system = {
   info: () => callPy<SystemInfo>('get_system_info'),
 }
 
+// ==================== 模块 A: 质量管理 API ====================
+
+export const quality = {
+  runStaticAnalysis: () => 
+    callPy<StaticAnalysisResult>('run_static_analysis'),
+  
+  scanUnitTests: () => 
+    callPy<UnitTestScanResult>('scan_unit_tests'),
+  
+  runUnitTest: (testPath: string) => 
+    callPy<UnitTestResult>('run_unit_test', testPath),
+  
+  getCodeMetrics: () => 
+    callPy<CodeMetrics>('get_code_metrics'),
+}
+
+// ==================== 模块 B: 视觉测试 API ====================
+
+export const visual = {
+  launchApp: () => 
+    callPy<AppLaunchResult>('launch_target_app'),
+  
+  closeApp: () => 
+    callPy<ApiResult>('close_target_app'),
+  
+  getScreenFrame: () => 
+    callPy<ScreenFrameResult>('get_screen_frame'),
+  
+  getWindowInfo: () => 
+    callPy<WindowInfoResult>('get_window_info'),
+  
+  focusWindow: (windowTitle?: string) => 
+    callPy<ApiResult>('focus_target_window', windowTitle),
+  
+  runStressTest: (iterations: number) => 
+    callPy<StressTestResult>('run_stress_test', iterations),
+  
+  executeAiCommand: (command: string) => 
+    callPy<AiCommandResult>('execute_ai_command', command),
+  
+  verifyVisual: (pattern: string) => 
+    callPy<VisualVerifyResult>('verify_visual_result', pattern),
+  
+  setApiKey: (apiKey: string) => 
+    callPy<ApiResult>('set_deepseek_api_key', apiKey),
+}
+
 // 默认导出
 export default {
   calculator,
   users,
   system,
+  quality,
+  visual,
 }

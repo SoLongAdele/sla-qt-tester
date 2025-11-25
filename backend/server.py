@@ -56,13 +56,28 @@ def start_vite() -> subprocess.Popen:
 
     # 启动 Vite
     try:
+        # 尝试使用 pnpm，如果失败则使用 npm
+        import shutil
+        pnpm_cmd = shutil.which("pnpm")
+        npm_cmd = shutil.which("npm")
+        
+        if pnpm_cmd:
+            cmd = ["pnpm", "run", "dev"]
+            logger.info("使用 pnpm 启动 Vite")
+        elif npm_cmd:
+            cmd = ["npm", "run", "dev"]
+            logger.info("使用 npm 启动 Vite")
+        else:
+            raise FileNotFoundError("未找到 pnpm 或 npm，请先安装 Node.js")
+        
         process = subprocess.Popen(
-            ["pnpm", "run", "dev"],
+            cmd,
             cwd=str(FRONTEND_DIR),
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
             bufsize=1,
+            shell=True,  # Windows 需要 shell=True 来执行 .cmd 文件
         )
         logger.info(f"Vite 进程已启动 (PID: {process.pid})")
         return process

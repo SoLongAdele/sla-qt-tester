@@ -1,14 +1,31 @@
-# PyWebView Desktop App 依赖
+# PyWebView Desktop App Dependencies
 
-# 核心依赖
+# Core dependencies
 pywebview>=5.0.0
 
-# 可选：更好的性能和功能
-# macOS 推荐
+# ==================== Platform-specific Dependencies ====================
+
+# Windows recommended (required for better performance)
+pywin32>=306; sys_platform == 'win32'
+
+# macOS recommended (optional for better performance)
 pyobjc>=10.0; sys_platform == 'darwin'
 
-# Windows 推荐
-# pywin32>=306; sys_platform == 'win32'
-
-# Linux 推荐 (需要系统安装 GTK)
+# Linux recommended (requires GTK installed on system)
 # PyGObject>=3.46.0; sys_platform == 'linux'
+
+# ==================== FlowTest Pro Test Platform Dependencies ====================
+
+# Computer Vision
+opencv-python>=4.8.0
+Pillow>=10.0.0
+
+# Automation
+pyautogui>=0.9.54
+pygetwindow>=0.0.9
+
+# AI Model Interface
+openai>=1.0.0
+
+# Data Processing
+numpy>=1.24.0
