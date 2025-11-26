@@ -5,9 +5,10 @@ import { renderMarkdown } from '../utils/markdown'
 
 interface UnitTestPanelProps {
   projectPath: string
+  onViewFile?: (filePath: string) => void
 }
 
-export function UnitTestPanel({ projectPath }: UnitTestPanelProps) {
+export function UnitTestPanel({ projectPath, onViewFile }: UnitTestPanelProps) {
   const [tests, setTests] = useState<UnitTestFile[]>([])
   const [results, setResults] = useState<Map<string, TestResult>>(new Map())
   const [running, setRunning] = useState<Set<string>>(new Set())
@@ -202,8 +203,12 @@ export function UnitTestPanel({ projectPath }: UnitTestPanelProps) {
                         </button>
                       )}
                       <button
-                        onClick={() => setSelectedTest(test.name)}
-                        disabled={!result}
+                        onClick={() => {
+                          if (onViewFile && test.file_path) {
+                            onViewFile(test.file_path)
+                          }
+                        }}
+                        disabled={!test.file_path}
                         className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 disabled:opacity-50 text-sm"
                       >
                         📄 查看

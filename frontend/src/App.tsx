@@ -65,6 +65,29 @@ function App() {
     }
   }
 
+  // 从测试文件路径跳转到文件预览
+  const handleViewTestFile = (filePath: string) => {
+    // 从文件树中查找对应的文件节点
+    const findFileNode = (nodes: FileNode[], path: string): FileNode | null => {
+      for (const node of nodes) {
+        if (node.path === path && node.type === 'file') {
+          return node
+        }
+        if (node.type === 'directory' && node.children) {
+          const found = findFileNode(node.children, path)
+          if (found) return found
+        }
+      }
+      return null
+    }
+
+    const fileNode = findFileNode(fileTree, filePath)
+    if (fileNode) {
+      setSelectedFile(fileNode)
+      setViewMode('filePreview')
+    }
+  }
+
   return (
     <div className="h-screen bg-gray-50 dark:bg-gray-900 flex overflow-hidden">
       {/* 左侧：项目列表 */}
@@ -258,7 +281,10 @@ function App() {
                 <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
                   质量管理 - 单元测试
                 </h2>
-                <UnitTestPanel projectPath={selectedProject.path} />
+                <UnitTestPanel 
+                  projectPath={selectedProject.path} 
+                  onViewFile={handleViewTestFile}
+                />
               </div>
             )}
             
