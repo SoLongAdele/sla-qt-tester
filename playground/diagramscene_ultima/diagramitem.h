@@ -6,7 +6,7 @@
 
 #include <QGraphicsPixmapItem>
 #include <QList>
-#include<QBrush>
+#include <QBrush>
 #include <QJsonObject>
 
 

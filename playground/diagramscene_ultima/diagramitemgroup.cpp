@@ -1,8 +1,8 @@
 #include "diagramitemgroup.h"
-#include<QPen>
-#include<QPainter>
-#include<QCursor>
-#include<QGraphicsSceneHoverEvent>
+#include <QPen>
+#include <QPainter>
+#include <QCursor>
+#include <QGraphicsSceneHoverEvent>
 DiagramItemGroup::DiagramItemGroup(QGraphicsItem *parent) :
     QGraphicsItemGroup(parent),
     top(INFINITY),

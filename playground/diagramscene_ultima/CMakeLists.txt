@@ -4,7 +4,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(diagramscene LANGUAGES CXX)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Svg)
 
 qt_standard_project_setup()
 
@@ -13,6 +13,12 @@ qt_add_executable(diagramscene
     diagramitem.cpp diagramitem.h
     diagramscene.cpp diagramscene.h
     diagramtextitem.cpp diagramtextitem.h
+    diagrampath.cpp diagrampath.h
+    diagramitemgroup.cpp diagramitemgroup.h
+    findreplacedialog.cpp findreplacedialog.h
+    deletecommand.cpp deletecommand.h
+    snapshotcommand.cpp snapshotcommand.h
+    mygraphicsview.cpp mygraphicsview.h
     main.cpp
     mainwindow.cpp mainwindow.h
 )
@@ -26,6 +32,7 @@ target_link_libraries(diagramscene PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
+    Qt6::Svg
 )
 
 # Resources:
@@ -40,7 +47,6 @@ set(diagramscene_resource_files
     "images/floodfill.png"
     "images/italic.png"
     "images/linecolor.png"
-    "images/linepointer.png"
     "images/pointer.png"
     "images/sendtoback.png"
     "images/textpointer.png"

@@ -4,17 +4,17 @@
 MyGraphicsView::MyGraphicsView(QWidget *parent) : QGraphicsView(parent)
 {
     pAction = new QAction(this);  // Initialize QAction
-    connect(pAction, &QAction::triggered, this, &MainWindow::pasteItems);  // Connect the signal and slot
 }
 
-void MyGraphicsView::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
+void MyGraphicsView::contextMenuEvent(QContextMenuEvent *event)
 {
     QMenu menu;
     pAction = menu.addAction(tr("Paste"));
 
-    QAction *selectedAction = menu.exec(event->screenPos());
+    QAction *selectedAction = menu.exec(event->globalPos());
     if (selectedAction == pAction) {
-        // If you need to pass a parameter to pasteItems, you can do so here
-        static_cast<MainWindow*>(parent())->pasteItems();
+        // Convert event position to scene coordinates
+        QPointF scenePos = mapToScene(event->pos());
+        static_cast<MainWindow*>(parent())->pasteItems(scenePos);
     }
 }

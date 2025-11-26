@@ -7,9 +7,9 @@
 #include <QGraphicsSceneContextMenuEvent>
 #include <QMenu>
 #include <QPainter>
-#include <diagramtextitem.h>
+#include "diagramtextitem.h"
 #include "diagrampath.h"
-#include<diagramscene.h>
+#include "diagramscene.h"
 
 
 DiagramItem::DiagramItem(DiagramType diagramType, QMenu *contextMenu, QGraphicsItem *parent)

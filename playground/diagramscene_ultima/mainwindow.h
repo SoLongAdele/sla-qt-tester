@@ -9,7 +9,7 @@
 #include <QMainWindow>
 #include <QPixmap>
 #include "diagramitem.h"
-#include<QStack>
+#include <QStack>
 #include "findreplacedialog.h"  // 包含新添加的查找和替换对话框
 #include "diagramtextitem.h"// 确保包含了 DiagramTextItem 的头文件
 

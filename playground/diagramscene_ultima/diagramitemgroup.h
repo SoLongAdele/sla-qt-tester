@@ -1,7 +1,7 @@
 #ifndef DIAGRAMITEMGROUP_H
 #define DIAGRAMITEMGROUP_H
 
-#include<diagramitem.h>
+#include "diagramitem.h"
 
 class DiagramItemGroup : public QGraphicsItemGroup
 {

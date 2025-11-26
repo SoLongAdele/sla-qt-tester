@@ -1,5 +1,5 @@
 #include "diagrampath.h"
-#include<QPainterPath>
+#include <QPainterPath>
 
 
 DiagramPath::DiagramPath(DiagramItem *startItem,DiagramItem *endItem,

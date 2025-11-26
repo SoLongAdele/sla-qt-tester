@@ -1,9 +1,9 @@
 #ifndef DIAGRAMPATH_H
 #define DIAGRAMPATH_H
 
-#include<QGraphicsPathItem>
-#include<diagramitem.h>
-#include<QPainterPath>
+#include <QGraphicsPathItem>
+#include "diagramitem.h"
+#include <QPainterPath>
 
 class DiagramPath : public QGraphicsPathItem
 {

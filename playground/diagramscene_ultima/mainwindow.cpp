@@ -27,7 +27,7 @@
 
 #include <QSvgGenerator>
 #include <QGraphicsScene>
-#include<diagrampath.h>
+#include "diagrampath.h"
 
 
 const int InsertTextButton = -1;

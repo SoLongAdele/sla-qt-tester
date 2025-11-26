@@ -4,6 +4,7 @@
 #include <QGraphicsView>
 #include <QAction>
 #include <QMenu>
+#include <QContextMenuEvent>
 
 class MyGraphicsView : public QGraphicsView
 {
@@ -13,7 +14,7 @@ public:
     MyGraphicsView(QWidget *parent = nullptr);
 
 protected:
-    void contextMenuEvent(QGraphicsSceneContextMenuEvent *event) override;
+    void contextMenuEvent(QContextMenuEvent *event) override;
 
 private:
     QAction *pAction;  // Declare the QAction pointer
