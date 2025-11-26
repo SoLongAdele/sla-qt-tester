@@ -53,18 +53,6 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
-      {/* 头部 */}
-      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-        <div className="px-6 py-4">
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
-            SLA Qt Tester
-          </h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Qt 项目可视化测试工具
-          </p>
-        </div>
-      </header>
-
       {/* 主内容区域 - 三栏布局 */}
       <div className="flex-1 flex overflow-hidden">
         {/* 左侧：项目列表 */}
