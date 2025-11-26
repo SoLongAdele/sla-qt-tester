@@ -1,0 +1,237 @@
+import { useState, useEffect } from 'react'
+import { scanUnitTests, runUnitTest } from '../api/unit-test'
+import type { UnitTestFile, TestResult } from '../api/unit-test'
+
+interface UnitTestPanelProps {
+  projectPath: string
+}
+
+export function UnitTestPanel({ projectPath }: UnitTestPanelProps) {
+  const [tests, setTests] = useState<UnitTestFile[]>([])
+  const [results, setResults] = useState<Map<string, TestResult>>(new Map())
+  const [running, setRunning] = useState<Set<string>>(new Set())
+  const [selectedTest, setSelectedTest] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  // 扫描测试
+  const handleScan = async () => {
+    setLoading(true)
+    try {
+      const testList = await scanUnitTests(projectPath)
+      setTests(testList)
+    } catch (error) {
+      console.error('扫描测试失败:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // 运行单个测试
+  const handleRunTest = async (test: UnitTestFile) => {
+    if (!test.exists) {
+      alert('测试可执行文件不存在，请先编译项目')
+      return
+    }
+
+    setRunning(prev => new Set(prev).add(test.name))
+    try {
+      const result = await runUnitTest(test.executable_path, test.name)
+      setResults(prev => new Map(prev).set(test.name, result))
+      setSelectedTest(test.name)
+    } catch (error) {
+      console.error('运行测试失败:', error)
+    } finally {
+      setRunning(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(test.name)
+        return newSet
+      })
+    }
+  }
+
+  // 运行全部测试
+  const handleRunAll = async () => {
+    for (const test of tests) {
+      if (test.exists) {
+        await handleRunTest(test)
+      }
+    }
+  }
+
+  // 初始加载
+  useEffect(() => {
+    handleScan()
+  }, [projectPath])
+
+  const selectedResult = selectedTest ? results.get(selectedTest) : null
+
+  return (
+    <div className="space-y-4">
+      {/* 操作按钮 */}
+      <div className="flex gap-2">
+        <button
+          onClick={handleScan}
+          disabled={loading}
+          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 text-sm"
+        >
+          {loading ? '扫描中...' : '🔄 扫描测试'}
+        </button>
+        <button
+          onClick={handleRunAll}
+          disabled={tests.length === 0 || running.size > 0}
+          className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 text-sm"
+        >
+          ▶ 运行全部
+        </button>
+      </div>
+
+      {/* 测试列表 */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-3">
+          📁 测试文件列表
+        </h3>
+
+        {tests.length === 0 ? (
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+            <p className="text-sm">未找到测试文件</p>
+            <p className="text-xs mt-2">请在项目的 tests 目录添加 test_*.cpp 文件</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {tests.map((test) => {
+              const result = results.get(test.name)
+              const isRunning = running.has(test.name)
+              const statusIcon = result
+                ? result.status === 'passed'
+                  ? '✅'
+                  : '❌'
+                : test.exists
+                ? '⚪'
+                : '⚠️'
+
+              return (
+                <div
+                  key={test.name}
+                  className={`p-3 rounded-lg border transition-colors ${
+                    selectedTest === test.name
+                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                      : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 flex-1">
+                      <span className="text-2xl">{statusIcon}</span>
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-800 dark:text-white">
+                          {test.name}
+                        </div>
+                        {result && (
+                          <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                            {result.passed} passed, {result.failed} failed • {result.duration}
+                          </div>
+                        )}
+                        {!test.exists && (
+                          <div className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                            ⚠️ 可执行文件不存在，请先编译
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleRunTest(test)}
+                        disabled={!test.exists || isRunning}
+                        className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50 text-sm"
+                      >
+                        {isRunning ? '⏳ 运行中...' : '▶ 运行'}
+                      </button>
+                      <button
+                        onClick={() => setSelectedTest(test.name)}
+                        disabled={!result}
+                        className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 disabled:opacity-50 text-sm"
+                      >
+                        📄 查看
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* 测试结果详情 */}
+      {selectedResult && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-3">
+            📊 测试结果详情
+          </h3>
+
+          <div className="space-y-3">
+            {/* 概览 */}
+            <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-medium text-gray-800 dark:text-white">
+                  {selectedResult.test_name}
+                </span>
+                <span
+                  className={`px-2 py-1 rounded text-sm font-medium ${
+                    selectedResult.status === 'passed'
+                      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                      : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                  }`}
+                >
+                  {selectedResult.status === 'passed' ? '✅ PASSED' : '❌ FAILED'}
+                </span>
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                总计: {selectedResult.total} • 通过: {selectedResult.passed} • 失败:{' '}
+                {selectedResult.failed} • 耗时: {selectedResult.duration}
+              </div>
+            </div>
+
+            {/* 测试用例详情 */}
+            {selectedResult.details.length > 0 && (
+              <div>
+                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  测试用例
+                </h4>
+                <div className="space-y-1">
+                  {selectedResult.details.map((detail, index) => (
+                    <div
+                      key={index}
+                      className={`p-2 rounded text-sm ${
+                        detail.status === 'PASS'
+                          ? 'bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-400'
+                          : 'bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-400'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span>{detail.status === 'PASS' ? '✓' : '✗'}</span>
+                        <span className="font-medium">{detail.name}</span>
+                      </div>
+                      {detail.message && (
+                        <div className="ml-6 mt-1 text-xs opacity-75">{detail.message}</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 完整输出 */}
+            <details className="mt-3">
+              <summary className="cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
+                查看完整输出
+              </summary>
+              <pre className="mt-2 p-3 bg-gray-900 text-gray-100 rounded text-xs overflow-x-auto">
+                {selectedResult.output}
+              </pre>
+            </details>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

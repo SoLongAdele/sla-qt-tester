@@ -6,7 +6,12 @@ from pathlib import Path
 from typing import Dict, List
 from core.calculator import add, subtract, multiply, divide, power
 from core.user_service import UserService
-from core.qt_project import scan_qt_projects, scan_directory_tree
+from core.qt_project import (
+    scan_qt_projects, 
+    scan_directory_tree,
+    scan_unit_tests,
+    run_unit_test,
+)
 from core.utils.logger import logger
 import platform
 import sys
@@ -184,6 +189,35 @@ class API:
         Returns:
             文件树结构
         """
-        logger.info(f"获取项目文件树: {project_path}")
-        nodes = scan_directory_tree(project_path, max_depth=5)
-        return [node.to_dict() for node in nodes]
+        logger.info(f"获取文件树: {project_path}")
+        tree = scan_directory_tree(project_path)
+        return [node.to_dict() for node in tree]
+    
+    def scan_unit_tests(self, project_path: str) -> List[Dict]:
+        """
+        扫描项目的单元测试
+        
+        Args:
+            project_path: 项目路径
+            
+        Returns:
+            单元测试文件列表
+        """
+        logger.info(f"扫描单元测试: {project_path}")
+        tests = scan_unit_tests(project_path)
+        return [test.to_dict() for test in tests]
+    
+    def run_unit_test(self, executable_path: str, test_name: str) -> Dict:
+        """
+        运行单元测试
+        
+        Args:
+            executable_path: 测试可执行文件路径
+            test_name: 测试名称
+            
+        Returns:
+            测试结果
+        """
+        logger.info(f"运行单元测试: {test_name}")
+        result = run_unit_test(executable_path, test_name)
+        return result.to_dict()

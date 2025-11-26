@@ -4,6 +4,7 @@ import type { QtProject, ProjectDetail, FileNode } from './api/qt-project'
 import { FileTree } from './components/FileTree'
 import { Modal } from './components/Modal'
 import { AboutContent } from './components/AboutContent'
+import { UnitTestPanel } from './components/UnitTestPanel'
 
 type ViewMode = 'overview' | 'quality' | 'visual' | 'settings'
 
@@ -237,36 +238,12 @@ function App() {
               </div>
               )}
             
-            {viewMode === 'quality' && (
+            {viewMode === 'quality' && selectedProject && (
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
                 <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
-                  质量管理
+                  质量管理 - 单元测试
                 </h2>
-                <div className="space-y-4">
-                  <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                    <h3 className="text-base font-semibold text-green-900 dark:text-green-100 mb-2">
-                      🔍 静态代码分析
-                    </h3>
-                    <p className="text-sm text-green-800 dark:text-green-200 mb-3">
-                      扫描 C++ 代码，检查代码质量问题
-                    </p>
-                    <button className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 text-sm">
-                      开始扫描
-                    </button>
-                  </div>
-                  
-                  <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                    <h3 className="text-base font-semibold text-blue-900 dark:text-blue-100 mb-2">
-                      🧪 单元测试
-                    </h3>
-                    <p className="text-sm text-blue-800 dark:text-blue-200 mb-3">
-                      扫描并运行 QTest 测试用例
-                    </p>
-                    <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm">
-                      扫描测试用例
-                    </button>
-                  </div>
-                </div>
+                <UnitTestPanel projectPath={selectedProject.path} />
               </div>
             )}
             
