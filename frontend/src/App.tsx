@@ -52,11 +52,9 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
-      {/* 主内容区域 - 三栏布局 */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* 左侧：项目列表 */}
-        <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto flex-shrink-0">
+    <div className="h-screen bg-gray-50 dark:bg-gray-900 flex overflow-hidden">
+      {/* 左侧：项目列表 */}
+      <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto flex-shrink-0">
           <div className="p-4 border-b border-gray-200 dark:border-gray-700">
             <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
               Qt 项目
@@ -99,21 +97,21 @@ function App() {
               </div>
             )}
           </div>
-        </aside>
+      </aside>
 
-        {/* 中间：文件树 */}
-        {selectedProject && (
-          <aside className="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto flex-shrink-0">
-            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-              <h2 className="text-lg font-semibold text-gray-800 dark:text-white truncate">
+      {/* 中间：文件树 */}
+      {selectedProject && (
+        <aside className="w-72 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex-shrink-0 flex flex-col">
+            <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+              <h2 className="text-sm font-semibold text-gray-800 dark:text-white truncate">
                 {selectedProject.name}
               </h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 文件浏览器
               </p>
             </div>
 
-            <div className="p-2">
+            <div className="flex-1 overflow-y-auto p-2">
               {loading ? (
                 <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                   <p className="text-sm">加载中...</p>
@@ -126,11 +124,11 @@ function App() {
                 <FileTree nodes={fileTree} onFileClick={handleFileClick} />
               )}
             </div>
-          </aside>
-        )}
+        </aside>
+      )}
 
-        {/* 右侧：测试主体区域 */}
-        <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
+      {/* 右侧：测试主体区域 */}
+      <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
           {!selectedProject ? (
             <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
               <div className="text-center">
@@ -175,8 +173,7 @@ function App() {
               </div>
             </div>
           ) : null}
-        </main>
-      </div>
+      </main>
     </div>
   )
 }

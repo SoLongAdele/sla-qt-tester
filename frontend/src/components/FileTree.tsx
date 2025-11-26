@@ -65,15 +65,15 @@ function TreeNode({ node, level = 0, onFileClick }: TreeNodeProps) {
     <div>
       <div
         onClick={handleClick}
-        style={{ paddingLeft: `${level * 16 + 8}px` }}
+        style={{ paddingLeft: `${level * 12 + 4}px` }}
         className={`
-          flex items-center gap-2 py-1 px-2 cursor-pointer
+          flex items-center gap-1.5 py-0.5 px-1.5 cursor-pointer
           hover:bg-gray-100 dark:hover:bg-gray-700 rounded
           ${node.type === 'file' ? 'text-gray-700 dark:text-gray-300' : 'text-gray-800 dark:text-white font-medium'}
         `}
       >
-        <span className="text-base">{getIcon()}</span>
-        <span className="truncate">{node.name}</span>
+        <span className="text-sm">{getIcon()}</span>
+        <span className="truncate text-sm">{node.name}</span>
       </div>
 
       {node.type === 'directory' && expanded && node.children && (
