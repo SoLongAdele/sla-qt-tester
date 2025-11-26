@@ -28,9 +28,6 @@ ENV/
 frontend/node_modules/
 frontend/dist/
 frontend/.vite/
-frontend/pnpm-lock.yaml
-frontend/package-lock.json
-frontend/yarn.lock
 
 # IDE
 .vscode/
@@ -47,3 +44,7 @@ logs/
 # Environment
 .env
 .env.local
+
+# Database
+test_history.db
+test_history.db-journal
