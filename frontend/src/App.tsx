@@ -6,8 +6,9 @@ import { Modal } from './components/Modal'
 import { AboutContent } from './components/AboutContent'
 import { UnitTestPanel } from './components/UnitTestPanel'
 import { FilePreview } from './components/FilePreview'
+import StaticAnalysisPanel from './components/StaticAnalysisPanel'
 
-type ViewMode = 'overview' | 'quality' | 'visual' | 'settings' | 'filePreview'
+type ViewMode = 'overview' | 'quality' | 'visual' | 'settings' | 'filePreview' | 'staticAnalysis'
 
 function App() {
   // 项目列表状态
@@ -215,6 +216,16 @@ function App() {
                   📋 质量管理
                 </button>
                 <button
+                  onClick={() => setViewMode('staticAnalysis')}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all text-sm ${
+                    viewMode === 'staticAnalysis'
+                      ? 'bg-orange-500 text-white shadow-md'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  🔍 静态分析
+                </button>
+                <button
                   onClick={() => setViewMode('visual')}
                   className={`px-4 py-2 rounded-lg font-medium transition-all text-sm ${
                     viewMode === 'visual'
@@ -289,6 +300,12 @@ function App() {
                   projectPath={selectedProject.path} 
                   onViewFile={handleViewTestFile}
                 />
+              </div>
+            )}
+            
+            {viewMode === 'staticAnalysis' && selectedProject && (
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden h-[calc(100vh-12rem)]">
+                <StaticAnalysisPanel projectPath={selectedProject.path} />
               </div>
             )}
             
