@@ -16,6 +16,7 @@ from core.qt_project import (
     analyze_test_failure,
 )
 from core.database import TestDatabase
+from core.services import VisualAgent
 from core.utils.logger import logger
 import platform
 import sys
@@ -34,6 +35,8 @@ class API:
         # 初始化测试数据库和记录器
         self.test_db = TestDatabase()
         self.test_recorder = TestRecorder(self.test_db)
+        # 初始化视觉测试代理
+        self.visual_agent = VisualAgent()
         logger.info("API 初始化完成")
 
     # ==================== 计算器 API ====================
@@ -434,3 +437,83 @@ class API:
         logger.info(f"清理 {days} 天前的测试记录")
         deleted = self.test_db.cleanup_old_records(days)
         return {"deleted": deleted, "success": True}
+    
+    # ==================== 视觉测试 API ====================
+    
+    def launch_target_app(self) -> Dict:
+        """启动被测应用程序"""
+        try:
+            return self.visual_agent.launch_target_app()
+        except Exception as e:
+            logger.error(f"启动应用错误: {e}")
+            return {"success": False, "error": str(e)}
+    
+    def close_target_app(self) -> Dict:
+        """关闭被测应用程序"""
+        try:
+            return self.visual_agent.close_target_app()
+        except Exception as e:
+            logger.error(f"关闭应用错误: {e}")
+            return {"success": False, "error": str(e)}
+    
+    def get_screen_frame(self) -> Dict:
+        """获取屏幕截图帧"""
+        try:
+            return self.visual_agent.get_screen_frame()
+        except Exception as e:
+            logger.error(f"截屏错误: {e}")
+            return {"success": False, "error": str(e)}
+    
+    def get_window_info(self) -> Dict:
+        """获取窗口信息"""
+        try:
+            return self.visual_agent.get_window_info()
+        except Exception as e:
+            logger.error(f"获取窗口错误: {e}")
+            return {"success": False, "error": str(e)}
+    
+    def focus_target_window(self, window_title: str = None) -> Dict:
+        """聚焦目标窗口"""
+        try:
+            return self.visual_agent.focus_target_window(window_title)
+        except Exception as e:
+            logger.error(f"聚焦窗口错误: {e}")
+            return {"success": False, "error": str(e)}
+    
+    def run_stress_test(self, iterations: int = 10) -> Dict:
+        """运行压力测试"""
+        try:
+            return self.visual_agent.run_stress_test(iterations)
+        except Exception as e:
+            logger.error(f"压力测试错误: {e}")
+            return {"success": False, "error": str(e)}
+    
+    def execute_ai_command(self, command: str) -> Dict:
+        """执行 AI 自然语言指令"""
+        try:
+            return self.visual_agent.execute_ai_command(command)
+        except Exception as e:
+            logger.error(f"AI 指令错误: {e}")
+            return {"success": False, "error": str(e)}
+    
+    def verify_visual_result(self, pattern: str) -> Dict:
+        """验证视觉结果"""
+        try:
+            return self.visual_agent.verify_visual_result(pattern)
+        except Exception as e:
+            logger.error(f"视觉验证错误: {e}")
+            return {"success": False, "error": str(e)}
+    
+    def set_ai_api_key(self, api_key: str, base_url: str = None) -> Dict:
+        """设置 AI API Key（支持讯飞星火等）"""
+        try:
+            from openai import OpenAI
+            self.visual_agent.ai_client = OpenAI(
+                api_key=api_key,
+                base_url=base_url or "https://spark-api-open.xf-yun.com/v1"
+            )
+            logger.info(f"AI API Key 已设置 (Base URL: {base_url or '讯飞星火'})")
+            return {"success": True, "message": "API Key 设置成功"}
+        except Exception as e:
+            logger.error(f"设置 API Key 错误: {e}")
+            return {"success": False, "error": str(e)}

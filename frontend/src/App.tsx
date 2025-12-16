@@ -6,6 +6,7 @@ import { Modal } from './components/Modal'
 import { AboutContent } from './components/AboutContent'
 import { UnitTestPanel } from './components/UnitTestPanel'
 import { FilePreview } from './components/FilePreview'
+import { VisualTestPanel } from './components/VisualTestPanel'
 
 type ViewMode = 'overview' | 'quality' | 'visual' | 'settings' | 'filePreview'
 
@@ -297,31 +298,7 @@ function App() {
                 <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
                   视觉测试
                 </h2>
-                <div className="space-y-4">
-                  <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
-                    <h3 className="text-base font-semibold text-purple-900 dark:text-purple-100 mb-2">
-                      📹 实时监控
-                    </h3>
-                    <p className="text-sm text-purple-800 dark:text-purple-200 mb-3">
-                      启动被测应用并实时捕获画面
-                    </p>
-                    <button className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 text-sm">
-                      启动监控
-                    </button>
-                  </div>
-                  
-                  <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
-                    <h3 className="text-base font-semibold text-orange-900 dark:text-orange-100 mb-2">
-                      ⚡ 压力测试
-                    </h3>
-                    <p className="text-sm text-orange-800 dark:text-orange-200 mb-3">
-                      设置迭代次数进行压力测试
-                    </p>
-                    <button className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 text-sm">
-                      开始测试
-                    </button>
-                  </div>
-                </div>
+                <VisualTestPanel />
               </div>
             )}
             
