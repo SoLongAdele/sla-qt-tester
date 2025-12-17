@@ -249,14 +249,13 @@ class StaticAnalyzer:
                     line = location.get("line", "0")
                     column = location.get("column", "0")
                     
-                    # 转换为相对路径
-                    try:
-                        rel_path = Path(file_path).relative_to(self.project_dir)
-                    except ValueError:
-                        rel_path = Path(file_path).name
+                    # 确保使用绝对路径（与文件树一致）
+                    abs_path = Path(file_path)
+                    if not abs_path.is_absolute():
+                        abs_path = self.project_dir / file_path
                     
                     locations.append({
-                        "file": str(rel_path),
+                        "file": str(abs_path),
                         "line": int(line),
                         "column": int(column)
                     })

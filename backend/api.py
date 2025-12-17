@@ -582,3 +582,60 @@ class API:
         except Exception as e:
             logger.error(f"设置 API Key 错误: {e}")
             return {"success": False, "error": str(e)}
+    
+    def open_file_at_line(self, file_path: str, line: int, column: int = 1) -> Dict:
+        """在 VS Code 中打开文件并跳转到指定行列
+        
+        Args:
+            file_path: 文件路径
+            line: 行号
+            column: 列号（默认为1）
+        
+        Returns:
+            操作结果
+        """
+        import subprocess
+        from pathlib import Path
+        
+        try:
+            file = Path(file_path)
+            
+            # 检查文件是否存在
+            if not file.exists():
+                logger.error(f"文件不存在: {file_path}")
+                return {"success": False, "error": "文件不存在"}
+            
+            # 构建 VS Code 命令：code -g file:line:column
+            # -g 参数表示跳转到指定位置
+            # -r 参数表示在当前窗口打开
+            cmd = ["code", "-r", "-g", f"{file_path}:{line}:{column}"]
+            
+            logger.info(f"执行命令: {' '.join(cmd)}")
+            
+            # 执行命令
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            
+            if result.returncode == 0:
+                logger.info(f"成功打开文件: {file_path} at {line}:{column}")
+                return {
+                    "success": True,
+                    "message": f"已跳转到 {file.name} 的第 {line} 行"
+                }
+            else:
+                logger.error(f"打开文件失败: {result.stderr}")
+                return {
+                    "success": False,
+                    "error": result.stderr or "执行失败"
+                }
+        
+        except subprocess.TimeoutExpired:
+            logger.error("打开文件超时")
+            return {"success": False, "error": "操作超时"}
+        except Exception as e:
+            logger.error(f"打开文件错误: {e}")
+            return {"success": False, "error": str(e)}

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 静态代码分析面板
  * 使用 cppcheck 进行静态代码分析
  */
@@ -16,11 +16,12 @@ import {
 
 interface StaticAnalysisPanelProps {
   projectPath: string;
+  onOpenFile?: (filePath: string, lines: number | number[]) => void;  // 打开文件回调（支持多行）
 }
 
 type ViewTab = 'severity' | 'category';
 
-export default function StaticAnalysisPanel({ projectPath }: StaticAnalysisPanelProps) {
+export default function StaticAnalysisPanel({ projectPath, onOpenFile }: StaticAnalysisPanelProps) {
   const [cppcheckStatus, setCppcheckStatus] = useState<CppcheckStatus | null>(null);
   const [isChecking, setIsChecking] = useState(false);
   const [isInstalling, setIsInstalling] = useState(false);
@@ -99,7 +100,7 @@ export default function StaticAnalysisPanel({ projectPath }: StaticAnalysisPanel
         checkTypes: checkTypes,
         cppcheckOptions: {
           inconclusive: cppcheckOptions.inconclusive || undefined,
-          jobs: cppcheckOptions.jobs > 1 ? cppcheckOptions.jobs : undefined,
+          jobs: cppcheckOptions.jobs && cppcheckOptions.jobs > 1 ? cppcheckOptions.jobs : undefined,
           max_configs: cppcheckOptions.max_configs && cppcheckOptions.max_configs !== 12 ? cppcheckOptions.max_configs : undefined,
           platform: cppcheckOptions.platform || undefined,
           std: cppcheckOptions.std || undefined,
@@ -121,6 +122,30 @@ export default function StaticAnalysisPanel({ projectPath }: StaticAnalysisPanel
     } finally {
       setIsAnalyzing(false);
     }
+  };
+
+  // 打开文件并跳转到指定行（高亮所有相关行）
+  const handleOpenFile = (issue: CodeIssue) => {
+    if (!issue.locations || issue.locations.length === 0) {
+      alert('该问题没有位置信息');
+      return;
+    }
+
+    if (!onOpenFile) {
+      alert('文件预览功能不可用');
+      return;
+    }
+
+    // 获取第一个位置的文件路径
+    const primaryFile = issue.locations[0].file;
+    
+    // 收集同一文件中的所有行号
+    const linesInFile = issue.locations
+      .filter(loc => loc.file === primaryFile)
+      .map(loc => loc.line);
+    
+    console.log('📍 打开文件并高亮行:', primaryFile, linesInFile);
+    onOpenFile(primaryFile, linesInFile);
   };
 
   // 组件挂载时检查状态
@@ -579,9 +604,11 @@ export default function StaticAnalysisPanel({ projectPath }: StaticAnalysisPanel
                           <div
                             key={`error-${idx}`}
                             onClick={() => setSelectedIssue(issue)}
+                            onDoubleClick={() => handleOpenFile(issue)}
                             className={`p-3 border rounded cursor-pointer hover:shadow-md transition-shadow ${
                               getSeverityBgColor(issue.severity)
                             } ${selectedIssue === issue ? 'ring-2 ring-blue-500' : ''}`}
+                            title="双击跳转到代码位置"
                           >
                             <div className="flex items-start gap-2">
                               <span className={`text-xs font-semibold uppercase ${getSeverityColor(issue.severity)}`}>
@@ -611,9 +638,11 @@ export default function StaticAnalysisPanel({ projectPath }: StaticAnalysisPanel
                           <div
                             key={`warning-${idx}`}
                             onClick={() => setSelectedIssue(issue)}
+                            onDoubleClick={() => handleOpenFile(issue)}
                             className={`p-3 border rounded cursor-pointer hover:shadow-md transition-shadow ${
                               getSeverityBgColor(issue.severity)
                             } ${selectedIssue === issue ? 'ring-2 ring-blue-500' : ''}`}
+                            title="双击跳转到代码位置"
                           >
                             <div className="flex items-start gap-2">
                               <span className={`text-xs font-semibold uppercase ${getSeverityColor(issue.severity)}`}>
@@ -662,9 +691,11 @@ export default function StaticAnalysisPanel({ projectPath }: StaticAnalysisPanel
                             <div
                               key={issueIdx}
                               onClick={() => setSelectedIssue(issue)}
+                              onDoubleClick={() => handleOpenFile(issue)}
                               className={`p-2 mb-1 bg-white rounded cursor-pointer hover:shadow-sm transition-shadow ${
                                 selectedIssue === issue ? 'ring-2 ring-blue-500' : ''
                               }`}
+                              title="双击跳转到代码位置"
                             >
                               {issue.locations && issue.locations[0] && (
                                 <p className="text-xs text-gray-600 font-mono">
@@ -719,11 +750,22 @@ export default function StaticAnalysisPanel({ projectPath }: StaticAnalysisPanel
                       <h4 className="text-sm font-semibold text-gray-700 mb-2">问题位置</h4>
                       <div className="space-y-2">
                         {selectedIssue.locations.map((loc, idx) => (
-                          <div key={idx} className="p-3 bg-gray-50 rounded border">
-                            <p className="text-sm font-mono text-gray-800">{loc.file}</p>
-                            <p className="text-xs text-gray-500 mt-1">
-                              行 {loc.line}, 列 {loc.column}
-                            </p>
+                          <div key={idx} className="p-3 bg-gray-50 rounded border hover:bg-gray-100 transition-colors">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-mono text-gray-800 truncate" title={loc.file}>{loc.file}</p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  行 {loc.line}, 列 {loc.column}
+                                </p>
+                              </div>
+                              <button
+                                onClick={() => handleOpenFile(selectedIssue)}
+                                className="flex-shrink-0 px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                                title="在编辑器中打开"
+                              >
+                                跳转
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>
