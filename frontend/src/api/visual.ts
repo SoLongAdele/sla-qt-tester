@@ -17,6 +17,17 @@ declare global {
         execute_ai_command: (command: string) => Promise<AiCommandResult>
         verify_visual_result: (pattern: string) => Promise<VisualVerifyResult>
         set_ai_api_key: (apiKey: string, baseUrl?: string) => Promise<ApiResult>
+        // MAA 风格视觉识别 API
+        find_template: (templatePath: string, threshold?: number, roi?: number[]) => Promise<TemplateMatchResult>
+        find_color: (lower: number[], upper: number[], roi?: number[], colorSpace?: string, minCount?: number) => Promise<ColorMatchResult>
+        click_template: (templatePath: string, threshold?: number, roi?: number[], offset?: number[]) => Promise<ClickTemplateResult>
+        wait_for_template: (templatePath: string, threshold?: number, timeout?: number, interval?: number, roi?: number[]) => Promise<WaitTemplateResult>
+        run_pipeline: (config: PipelineConfig, entry: string, resourceDir?: string) => Promise<PipelineResult>
+        run_pipeline_from_file: (jsonPath: string, entry: string, resourceDir?: string) => Promise<PipelineResult>
+        get_vision_capabilities: () => Promise<VisionCapabilities>
+        // Pipeline 测试 API
+        scan_pipeline_tests: (directory?: string) => Promise<PipelineTestFile[]>
+        run_pipeline_test: (pipelinePath: string, entry: string, launchApp?: boolean, resourceDir?: string) => Promise<PipelineTestResult>
       }
     }
   }
@@ -66,6 +77,119 @@ export interface VisualVerifyResult extends ApiResult {
   message?: string
 }
 
+// ==================== MAA 风格视觉识别类型 ====================
+
+export interface Rect {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+export interface MatchResult {
+  box: Rect
+  score: number
+  text?: string
+  label?: string
+}
+
+export interface TemplateMatchResult extends ApiResult {
+  algorithm?: string
+  cost_ms?: number
+  box?: Rect
+  score?: number
+  all_count?: number
+  filtered_count?: number
+}
+
+export interface ColorMatchResult extends ApiResult {
+  algorithm?: string
+  cost_ms?: number
+  box?: Rect
+  pixel_count?: number
+  all_count?: number
+  filtered_count?: number
+}
+
+export interface ClickTemplateResult extends ApiResult {
+  action?: string
+  position?: { x: number; y: number }
+  find_result?: TemplateMatchResult
+}
+
+export interface WaitTemplateResult extends ApiResult {
+  elapsed_ms?: number
+  find_result?: TemplateMatchResult
+}
+
+export interface PipelineNode {
+  recognition?: string
+  template?: string[]
+  threshold?: number[]
+  roi?: number[]
+  lower?: number[]
+  upper?: number[]
+  method?: number
+  count?: number
+  connected?: boolean
+  action?: string
+  target?: boolean | number[]
+  target_offset?: number[]
+  begin?: boolean | number[]
+  end?: number[]
+  duration?: number
+  input_text?: string
+  next?: string[]
+  timeout?: number
+  rate_limit?: number
+  pre_delay?: number
+  post_delay?: number
+  inverse?: boolean
+  enabled?: boolean
+}
+
+export type PipelineConfig = Record<string, PipelineNode>
+
+export interface PipelineResult extends ApiResult {
+  entry?: string
+  executed_nodes?: string[]
+  last_node?: string
+  last_reco_result?: {
+    success: boolean
+    algorithm: string
+    cost_ms: number
+    box?: Rect
+    score?: number
+  }
+  cost_ms?: number
+  logs?: string[]
+}
+
+export interface VisionCapabilities extends ApiResult {
+  visual_libs_available?: boolean
+  vision_module_available?: boolean
+  capabilities?: string[]
+  description?: string
+}
+
+// ==================== Pipeline 测试类型 ====================
+
+export interface PipelineTestFile {
+  name: string
+  path: string
+  entries: string[]
+  description: string
+  node_count: number
+}
+
+export interface PipelineTestResult extends ApiResult {
+  pipeline_path?: string
+  entry?: string
+  app_launched?: boolean
+  resource_dir?: string
+  pipeline_result?: PipelineResult
+}
+
 /**
  * 通用 Python 调用函数
  */
@@ -85,6 +209,7 @@ async function callPy<T>(fn: string, ...args: unknown[]): Promise<T> {
 // ==================== 视觉测试 API ====================
 
 export const visual = {
+  // 基础控制
   launchApp: () => 
     callPy<AppLaunchResult>('launch_target_app'),
   
@@ -100,6 +225,7 @@ export const visual = {
   focusWindow: (windowTitle?: string) => 
     callPy<ApiResult>('focus_target_window', windowTitle),
   
+  // 压力测试 & AI
   runStressTest: (iterations: number) => 
     callPy<StressTestResult>('run_stress_test', iterations),
   
@@ -111,6 +237,64 @@ export const visual = {
   
   setApiKey: (apiKey: string, baseUrl?: string) => 
     callPy<ApiResult>('set_ai_api_key', apiKey, baseUrl),
+
+  // ==================== MAA 风格视觉识别 ====================
+  
+  /**
+   * 模板匹配 - 在屏幕上查找模板图片
+   */
+  findTemplate: (templatePath: string, threshold = 0.7, roi?: number[]) =>
+    callPy<TemplateMatchResult>('find_template', templatePath, threshold, roi),
+  
+  /**
+   * 颜色匹配 - 在屏幕上查找指定颜色
+   */
+  findColor: (lower: number[], upper: number[], roi?: number[], colorSpace = 'HSV', minCount = 100) =>
+    callPy<ColorMatchResult>('find_color', lower, upper, roi, colorSpace, minCount),
+  
+  /**
+   * 找图并点击 - 查找模板并点击其中心
+   */
+  clickTemplate: (templatePath: string, threshold = 0.7, roi?: number[], offset?: number[]) =>
+    callPy<ClickTemplateResult>('click_template', templatePath, threshold, roi, offset),
+  
+  /**
+   * 等待模板出现
+   */
+  waitForTemplate: (templatePath: string, threshold = 0.7, timeout = 10000, interval = 500, roi?: number[]) =>
+    callPy<WaitTemplateResult>('wait_for_template', templatePath, threshold, timeout, interval, roi),
+  
+  /**
+   * 运行视觉测试流水线
+   */
+  runPipeline: (config: PipelineConfig, entry: string, resourceDir?: string) =>
+    callPy<PipelineResult>('run_pipeline', config, entry, resourceDir),
+  
+  /**
+   * 从 JSON 文件运行 Pipeline
+   */
+  runPipelineFromFile: (jsonPath: string, entry: string, resourceDir?: string) =>
+    callPy<PipelineResult>('run_pipeline_from_file', jsonPath, entry, resourceDir),
+  
+  /**
+   * 获取视觉识别能力信息
+   */
+  getVisionCapabilities: () =>
+    callPy<VisionCapabilities>('get_vision_capabilities'),
+
+  // ==================== Pipeline 测试 ====================
+  
+  /**
+   * 扫描 Pipeline 测试配置文件
+   */
+  scanPipelineTests: (directory?: string) =>
+    callPy<PipelineTestFile[]>('scan_pipeline_tests', directory),
+  
+  /**
+   * 运行 Pipeline 测试
+   */
+  runPipelineTest: (pipelinePath: string, entry: string, launchApp = true, resourceDir?: string) =>
+    callPy<PipelineTestResult>('run_pipeline_test', pipelinePath, entry, launchApp, resourceDir),
 }
 
 export default visual

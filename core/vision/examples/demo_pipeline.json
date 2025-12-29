@@ -1,0 +1,96 @@
+{
+    "$comment": "FreeCharts 流程图编辑器 - 基础测试",
+    "$description": "测试在画布上创建流程图节点",
+    "$resource_base": "../resources/freecharts",
+    
+    "开始测试": {
+        "recognition": "DirectHit",
+        "action": "DoNothing",
+        "pre_delay": 1500,
+        "next": ["等待应用启动"]
+    },
+    
+    "等待应用启动": {
+        "recognition": "TemplateMatch",
+        "template": ["logo.png"],
+        "threshold": [0.5],
+        "roi": [0, 0, 1920, 200],
+        "timeout": 10000,
+        "rate_limit": 500,
+        "action": "DoNothing",
+        "post_delay": 500,
+        "next": ["选择处理节点"]
+    },
+    
+    "选择处理节点": {
+        "recognition": "TemplateMatch",
+        "template": ["NodesIcon/Step.png"],
+        "threshold": [0.6],
+        "roi": [0, 50, 200, 800],
+        "timeout": 5000,
+        "action": "Click",
+        "target": true,
+        "pre_delay": 300,
+        "post_delay": 500,
+        "next": ["在画布放置处理节点"]
+    },
+    
+    "在画布放置处理节点": {
+        "recognition": "DirectHit",
+        "action": "Click",
+        "target": [600, 300],
+        "pre_delay": 200,
+        "post_delay": 500,
+        "next": ["选择判断节点"]
+    },
+    
+    "选择判断节点": {
+        "recognition": "TemplateMatch",
+        "template": ["NodesIcon/Conditional.png"],
+        "threshold": [0.6],
+        "roi": [0, 50, 200, 800],
+        "timeout": 5000,
+        "action": "Click",
+        "target": true,
+        "pre_delay": 300,
+        "post_delay": 500,
+        "next": ["在画布放置判断节点"]
+    },
+    
+    "在画布放置判断节点": {
+        "recognition": "DirectHit",
+        "action": "Click",
+        "target": [600, 500],
+        "pre_delay": 200,
+        "post_delay": 500,
+        "next": ["选择端点节点"]
+    },
+    
+    "选择端点节点": {
+        "recognition": "TemplateMatch",
+        "template": ["NodesIcon/StartEnd.png"],
+        "threshold": [0.6],
+        "roi": [0, 50, 200, 800],
+        "timeout": 5000,
+        "action": "Click",
+        "target": true,
+        "pre_delay": 300,
+        "post_delay": 500,
+        "next": ["在画布放置端点节点"]
+    },
+    
+    "在画布放置端点节点": {
+        "recognition": "DirectHit",
+        "action": "Click",
+        "target": [600, 150],
+        "pre_delay": 200,
+        "post_delay": 500,
+        "next": ["测试完成"]
+    },
+    
+    "测试完成": {
+        "recognition": "DirectHit",
+        "action": "DoNothing",
+        "next": []
+    }
+}

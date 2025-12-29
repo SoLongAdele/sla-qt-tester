@@ -1,0 +1,94 @@
+{
+    "$comment": "FreeCharts/DiagramScene 流程图编辑器测试",
+    "$description": "测试左侧工具箱选择节点并放置到画布",
+    "$resource_base": "../resources/freecharts",
+    
+    "启动测试": {
+        "recognition": "DirectHit",
+        "action": "DoNothing",
+        "pre_delay": 1500,
+        "next": ["检查主窗口"]
+    },
+    
+    "检查主窗口": {
+        "recognition": "TemplateMatch",
+        "template": ["logo.png"],
+        "threshold": [0.5],
+        "roi": [0, 0, 1920, 200],
+        "timeout": 10000,
+        "rate_limit": 500,
+        "action": "DoNothing",
+        "post_delay": 500,
+        "next": ["选择数据节点"]
+    },
+    
+    "选择数据节点": {
+        "recognition": "TemplateMatch",
+        "template": ["NodesIcon/Io.png"],
+        "threshold": [0.6],
+        "roi": [0, 50, 200, 800],
+        "timeout": 5000,
+        "action": "Click",
+        "target": true,
+        "pre_delay": 300,
+        "post_delay": 500,
+        "next": ["放置数据节点"]
+    },
+    
+    "放置数据节点": {
+        "recognition": "DirectHit",
+        "action": "Click",
+        "target": [700, 350],
+        "pre_delay": 200,
+        "post_delay": 500,
+        "next": ["选择文件节点"]
+    },
+    
+    "选择文件节点": {
+        "recognition": "TemplateMatch",
+        "template": ["NodesIcon/Document.png"],
+        "threshold": [0.6],
+        "roi": [0, 50, 200, 800],
+        "timeout": 5000,
+        "action": "Click",
+        "target": true,
+        "pre_delay": 300,
+        "post_delay": 500,
+        "next": ["放置文件节点"]
+    },
+    
+    "放置文件节点": {
+        "recognition": "DirectHit",
+        "action": "Click",
+        "target": [900, 350],
+        "pre_delay": 200,
+        "post_delay": 500,
+        "next": ["测试结束"]
+    },
+    
+    "测试结束": {
+        "recognition": "DirectHit",
+        "action": "DoNothing",
+        "next": []
+    },
+    
+    "工具栏测试": {
+        "recognition": "DirectHit",
+        "action": "DoNothing",
+        "pre_delay": 500,
+        "next": ["点击新建"]
+    },
+    
+    "点击新建": {
+        "recognition": "TemplateMatch",
+        "template": ["newfile.png"],
+        "threshold": [0.6],
+        "roi": [0, 0, 400, 100],
+        "timeout": 5000,
+        "action": "Click",
+        "target": true,
+        "pre_delay": 200,
+        "post_delay": 500,
+        "next": []
+    }
+}
