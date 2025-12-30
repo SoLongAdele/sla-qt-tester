@@ -1,21 +1,17 @@
 /**
  * 视觉测试面板组件
- * 包含实时监控、Pipeline测试、压力测试和AI自动化四个子功能
+ * 包含Pipeline测试和AI自动化两个子功能
  */
 import { useState, useEffect, useRef } from 'react'
 import { visual } from '../api/visual'
-import { MonitorPanel } from './MonitorPanel'
-import { StressTestPanel } from './StressTestPanel'
 import type { 
-  ScreenFrameResult, 
-  StressTestResult, 
   AiCommandResult, 
   VisualVerifyResult,
   PipelineTestFile,
   PipelineTestResult
 } from '../api/visual'
 
-type SubTab = 'pipeline' | 'monitor' | 'stress' | 'ai'
+type SubTab = 'pipeline' | 'ai'
 
 export function VisualTestPanel() {
   const [activeSubTab, setActiveSubTab] = useState<SubTab>('pipeline')
@@ -35,26 +31,6 @@ export function VisualTestPanel() {
           🔄 Pipeline 测试
         </button>
         <button
-          onClick={() => setActiveSubTab('monitor')}
-          className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all text-sm ${
-            activeSubTab === 'monitor'
-              ? 'bg-green-500 text-white shadow-md'
-              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
-          }`}
-        >
-          📹 实时监控
-        </button>
-        <button
-          onClick={() => setActiveSubTab('stress')}
-          className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all text-sm ${
-            activeSubTab === 'stress'
-              ? 'bg-orange-500 text-white shadow-md'
-              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
-          }`}
-        >
-          ⚡ 压力测试
-        </button>
-        <button
           onClick={() => setActiveSubTab('ai')}
           className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all text-sm ${
             activeSubTab === 'ai'
@@ -69,8 +45,6 @@ export function VisualTestPanel() {
       {/* 内容区域 */}
       <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
         {activeSubTab === 'pipeline' && <PipelineTestPanel />}
-        {activeSubTab === 'monitor' && <MonitorPanel />}
-        {activeSubTab === 'stress' && <StressTestPanel />}
         {activeSubTab === 'ai' && <AiAutomationPanel />}
       </div>
     </div>
