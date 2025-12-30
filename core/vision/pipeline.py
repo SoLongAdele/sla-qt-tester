@@ -24,15 +24,17 @@ try:
 except ImportError:
     CV_AVAILABLE = False
 
-from .types import Rect, RecoResult, MatchResult, Point
+from .types import Rect, RecoResult, MatchResult, Point, OrderBy
 from .template_matcher import TemplateMatcher, TemplateMatcherParam
 from .color_matcher import ColorMatcher, ColorMatcherParam
+from .feature_matcher import FeatureMatcher, FeatureMatcherParam, FeatureDetector
 
 
 class RecognitionType(Enum):
     """识别算法类型"""
     DIRECT_HIT = auto()      # 直接命中，不识别
     TEMPLATE_MATCH = auto()  # 模板匹配
+    FEATURE_MATCH = auto()   # 特征匹配 (抗透视/旋转)
     COLOR_MATCH = auto()     # 颜色匹配
     # OCR = auto()           # 文字识别（可扩展）
 
@@ -91,6 +93,8 @@ class PipelineNode:
         reco_str = data.get('recognition', 'DirectHit')
         if reco_str == 'TemplateMatch':
             reco_type = RecognitionType.TEMPLATE_MATCH
+        elif reco_str == 'FeatureMatch':
+            reco_type = RecognitionType.FEATURE_MATCH
         elif reco_str == 'ColorMatch':
             reco_type = RecognitionType.COLOR_MATCH
         
@@ -115,6 +119,18 @@ class PipelineNode:
                 'template': data.get('template', []),
                 'threshold': data.get('threshold', [0.7]),
                 'method': data.get('method', 5),
+                'green_mask': data.get('green_mask', False),
+                'multi_scale': data.get('multi_scale', True),
+                'scale_range': data.get('scale_range', [0.5, 1.5]),
+                'scale_step': data.get('scale_step', 0.1),
+                'order_by': data.get('order_by', 'Score'),  # 默认按分数排序
+            }
+        elif reco_type == RecognitionType.FEATURE_MATCH:
+            reco_param = {
+                'template': data.get('template', []),
+                'detector': data.get('detector', 'AKAZE'),
+                'ratio': data.get('ratio', 0.75),
+                'count': data.get('count', 10),
                 'green_mask': data.get('green_mask', False),
             }
         elif reco_type == RecognitionType.COLOR_MATCH:
@@ -272,37 +288,66 @@ class Pipeline:
         Returns:
             执行结果
         """
+
+        # 清空 log 文件夹
+        import os, shutil
+        log_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'log')
+        if os.path.exists(log_dir):
+            for f in os.listdir(log_dir):
+                fp = os.path.join(log_dir, f)
+                try:
+                    if os.path.isfile(fp):
+                        os.remove(fp)
+                except Exception:
+                    pass
+
         start_time = time.perf_counter()
         self._running = True
         self._logs = []
-        
+
         result = PipelineResult(entry=entry)
-        
+
         if entry not in self._nodes:
             result.error = f"Entry node not found: {entry}"
             result.cost_ms = (time.perf_counter() - start_time) * 1000
             return result
         
+
         try:
             current_node = entry
-            
+            # 截图文件名用节点名
             while self._running and current_node:
                 node = self._nodes.get(current_node)
                 if not node or not node.enabled:
                     break
-                
                 self._log(f"执行节点: {current_node}")
-                
                 # 执行识别
                 reco_result = self._recognize(node)
                 self._last_reco_results[current_node] = reco_result
                 result.last_reco_result = reco_result
-                
                 # 检查识别结果
                 success = reco_result.success
                 if node.inverse:
                     success = not success
-                
+                # 识别失败也截图，文件名加_fail
+                import cv2, pyautogui, os, re
+                img = pyautogui.screenshot()
+                img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+                if reco_result.box:
+                    box = reco_result.box
+                    cv2.rectangle(img, (box.x, box.y), (box.x + box.width, box.y + box.height), (0,0,255), 3)
+                log_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'log')
+                os.makedirs(log_dir, exist_ok=True)
+                idx = list(self._nodes.keys()).index(str(current_node)) + 1
+                # 文件名加_fail后缀表示失败
+                if not success:
+                    save_path = os.path.join(log_dir, f"node_{idx}_fail.png")
+                else:
+                    save_path = os.path.join(log_dir, f"node_{idx}.png")
+                try:
+                    cv2.imwrite(save_path, img)
+                except Exception as e:
+                    self._log(f"截图保存失败: {e}")
                 if not success:
                     # 识别失败，尝试下一个 next 节点
                     next_node = self._find_next_node(node)
@@ -313,39 +358,29 @@ class Pipeline:
                         # 超时处理
                         self._log(f"节点 {current_node} 识别超时")
                         break
-                
-                # 执行动作
                 self._log(f"识别成功，分数: {reco_result.score:.3f}")
                 result.executed_nodes.append(current_node)
                 result.last_node = current_node
-                
                 # 动作前延迟
                 if node.pre_delay > 0:
                     time.sleep(node.pre_delay / 1000)
-                
                 self._execute_action(node, reco_result)
-                
                 # 动作后延迟
                 if node.post_delay > 0:
                     time.sleep(node.post_delay / 1000)
-                
                 # 进入下一个节点
                 if node.next:
                     current_node = node.next[0]  # 简化：取第一个
                 else:
                     current_node = None
-            
             result.success = len(result.executed_nodes) > 0
-            
         except Exception as e:
             result.error = str(e)
             self._log(f"执行错误: {e}")
-        
         finally:
             self._running = False
             result.cost_ms = (time.perf_counter() - start_time) * 1000
             result.logs = self._logs.copy()
-        
         return result
     
     def stop(self):
@@ -382,6 +417,9 @@ class Pipeline:
         elif node.recognition == RecognitionType.TEMPLATE_MATCH:
             return self._template_match(image, node, roi)
         
+        elif node.recognition == RecognitionType.FEATURE_MATCH:
+            return self._feature_match(image, node, roi)
+        
         elif node.recognition == RecognitionType.COLOR_MATCH:
             return self._color_match(image, node, roi)
         
@@ -394,7 +432,7 @@ class Pipeline:
         node: PipelineNode,
         roi: Optional[Rect]
     ) -> RecoResult:
-        """模板匹配"""
+        """模板匹配 (支持多尺度)"""
         param = node.recognition_param
         
         # 处理模板路径
@@ -419,14 +457,77 @@ class Pipeline:
         if isinstance(thresholds, (int, float)):
             thresholds = [thresholds]
         
+        # 解析排序方式
+        order_by_str = param.get('order_by', 'Score')
+        order_by_map = {
+            'Horizontal': OrderBy.HORIZONTAL,
+            'Vertical': OrderBy.VERTICAL,
+            'Score': OrderBy.SCORE,
+            'Area': OrderBy.AREA,
+            'Random': OrderBy.RANDOM,
+        }
+        order_by = order_by_map.get(order_by_str, OrderBy.SCORE)
+        
         matcher_param = TemplateMatcherParam(
             templates=templates,
             thresholds=thresholds,
             method=param.get('method', 5),
             green_mask=param.get('green_mask', False),
+            multi_scale=param.get('multi_scale', True),
+            scale_range=param.get('scale_range', [0.5, 1.5]),
+            scale_step=param.get('scale_step', 0.1),
+            order_by=order_by,
         )
         
         matcher = TemplateMatcher(image, matcher_param, roi, name=node.name)
+        return matcher.analyze()
+    
+    def _feature_match(
+        self,
+        image: np.ndarray,
+        node: PipelineNode,
+        roi: Optional[Rect]
+    ) -> RecoResult:
+        """特征匹配 (抗透视/旋转)"""
+        param = node.recognition_param
+        
+        # 处理模板路径
+        templates = param.get('template', [])
+        if isinstance(templates, str):
+            templates = [templates]
+        
+        # 如果设置了资源目录，补全路径
+        if self._resource_dir:
+            templates = [
+                str(self._resource_dir / t) if not Path(t).is_absolute() else t
+                for t in templates
+            ]
+        
+        # 验证模板文件是否存在
+        for t in templates:
+            if not Path(t).exists():
+                self._log(f"警告: 模板文件不存在: {t}")
+        
+        # 解析检测器类型
+        detector_str = param.get('detector', 'AKAZE')
+        detector_map = {
+            'SIFT': FeatureDetector.SIFT,
+            'ORB': FeatureDetector.ORB,
+            'BRISK': FeatureDetector.BRISK,
+            'KAZE': FeatureDetector.KAZE,
+            'AKAZE': FeatureDetector.AKAZE,
+        }
+        detector = detector_map.get(detector_str.upper(), FeatureDetector.AKAZE)
+        
+        matcher_param = FeatureMatcherParam(
+            templates=templates,
+            detector=detector,
+            ratio=param.get('ratio', 0.75),
+            count=param.get('count', 10),
+            green_mask=param.get('green_mask', False),
+        )
+        
+        matcher = FeatureMatcher(image, matcher_param, roi, name=node.name)
         return matcher.analyze()
     
     def _color_match(
