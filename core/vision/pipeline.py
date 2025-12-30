@@ -24,7 +24,7 @@ try:
 except ImportError:
     CV_AVAILABLE = False
 
-from .types import Rect, RecoResult, MatchResult, Point
+from .types import Rect, RecoResult, MatchResult, Point, OrderBy
 from .template_matcher import TemplateMatcher, TemplateMatcherParam
 from .color_matcher import ColorMatcher, ColorMatcherParam
 from .feature_matcher import FeatureMatcher, FeatureMatcherParam, FeatureDetector
@@ -123,6 +123,7 @@ class PipelineNode:
                 'multi_scale': data.get('multi_scale', True),
                 'scale_range': data.get('scale_range', [0.5, 1.5]),
                 'scale_step': data.get('scale_step', 0.1),
+                'order_by': data.get('order_by', 'Score'),  # 默认按分数排序
             }
         elif reco_type == RecognitionType.FEATURE_MATCH:
             reco_param = {
@@ -456,6 +457,17 @@ class Pipeline:
         if isinstance(thresholds, (int, float)):
             thresholds = [thresholds]
         
+        # 解析排序方式
+        order_by_str = param.get('order_by', 'Score')
+        order_by_map = {
+            'Horizontal': OrderBy.HORIZONTAL,
+            'Vertical': OrderBy.VERTICAL,
+            'Score': OrderBy.SCORE,
+            'Area': OrderBy.AREA,
+            'Random': OrderBy.RANDOM,
+        }
+        order_by = order_by_map.get(order_by_str, OrderBy.SCORE)
+        
         matcher_param = TemplateMatcherParam(
             templates=templates,
             thresholds=thresholds,
@@ -464,6 +476,7 @@ class Pipeline:
             multi_scale=param.get('multi_scale', True),
             scale_range=param.get('scale_range', [0.5, 1.5]),
             scale_step=param.get('scale_step', 0.1),
+            order_by=order_by,
         )
         
         matcher = TemplateMatcher(image, matcher_param, roi, name=node.name)

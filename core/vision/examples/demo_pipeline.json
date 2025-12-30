@@ -1,97 +1,79 @@
 {
-    "$comment": "FreeCharts 流程图编辑器 - Disk图标识别测试",
-    "$description": "使用 Disk 图标测试模板匹配能力 - Disk 图标区分度强，适合作为基准测试",
+    "$comment": "FreeCharts 流程图编辑器 - Conditional菱形识别测试",
+    "$description": "使用正确尺寸的模板(0.45倍缩放)，无需多尺度匹配",
     "$resource_base": "../resources/freecharts",
     
     "开始测试": {
         "recognition": "DirectHit",
         "action": "DoNothing",
         "pre_delay": 1500,
-        "next": ["等待应用启动"]
+        "next": ["识别菱形图标"]
     },
     
-    "等待应用启动": {
+    "识别菱形图标": {
         "recognition": "TemplateMatch",
-        "template": ["logo.png"],
-        "threshold": [0.5],
-        "roi": [0, 0, 1920, 200],
-        "timeout": 10000,
-        "rate_limit": 500,
-        "action": "DoNothing",
-        "post_delay": 500,
-        "next": ["识别Disk图标"]
-    },
-    
-    "识别Disk图标": {
-        "recognition": "TemplateMatch",
-        "template": ["NodesIcon/Disk.png"],
-        "threshold": [0.5],
-        "roi": [0, 50, 220, 800],
+        "template": ["NodesIcon/final/Conditional_fix.png"],
+        "threshold": [0.2],
+        "roi": [0, 100, 220, 700],
+        "multi_scale": false,
         "timeout": 5000,
-        "multi_scale": true,
-        "scale_range": [0.3, 1.2],
-        "scale_step": 0.1,
         "action": "Click",
         "target": true,
         "pre_delay": 300,
         "post_delay": 500,
-        "next": ["在画布放置Disk节点"]
+        "next": ["在画布放置菱形"]
     },
     
-    "在画布放置Disk节点": {
+    "在画布放置菱形": {
         "recognition": "DirectHit",
         "action": "Click",
         "target": [600, 300],
         "pre_delay": 200,
         "post_delay": 500,
-        "next": ["再次识别Disk"]
+        "next": ["再次识别菱形"]
     },
     
-    "再次识别Disk": {
+    "再次识别菱形": {
         "recognition": "TemplateMatch",
-        "template": ["NodesIcon/Disk.png"],
-        "threshold": [0.5],
-        "roi": [0, 50, 220, 800],
+        "template": ["NodesIcon/final/Conditional_fix.png"],
+        "threshold": [0.2],
+        "roi": [0, 100, 220, 700],
+        "multi_scale": false,
         "timeout": 5000,
-        "multi_scale": true,
-        "scale_range": [0.3, 1.2],
-        "scale_step": 0.1,
         "action": "Click",
         "target": true,
         "pre_delay": 300,
         "post_delay": 500,
-        "next": ["在画布放置第二个节点"]
+        "next": ["在画布放置第二个菱形"]
     },
     
-    "在画布放置第二个节点": {
+    "在画布放置第二个菱形": {
         "recognition": "DirectHit",
         "action": "Click",
         "target": [600, 500],
         "pre_delay": 200,
         "post_delay": 500,
-        "next": ["第三次识别Disk"]
+        "next": ["第三次识别菱形"]
     },
     
-    "第三次识别Disk": {
+    "第三次识别菱形": {
         "recognition": "TemplateMatch",
-        "template": ["NodesIcon/Disk.png"],
-        "threshold": [0.5],
-        "roi": [0, 50, 220, 800],
+        "template": ["NodesIcon/final/Conditional_fix.png"],
+        "threshold": [0.2],
+        "roi": [0, 100, 220, 700],
+        "multi_scale": false,
         "timeout": 5000,
-        "multi_scale": true,
-        "scale_range": [0.3, 1.2],
-        "scale_step": 0.1,
         "action": "Click",
         "target": true,
         "pre_delay": 300,
         "post_delay": 500,
-        "next": ["在画布放置第三个节点"]
+        "next": ["在画布放置第三个菱形"]
     },
     
-    "在画布放置第三个节点": {
+    "在画布放置第三个菱形": {
         "recognition": "DirectHit",
         "action": "Click",
-        "target": [600, 150],
+        "target": [800, 300],
         "pre_delay": 200,
         "post_delay": 500,
         "next": ["测试完成"]
