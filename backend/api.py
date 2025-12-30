@@ -786,6 +786,23 @@ class API:
             logger.error(f"设置 API Key 错误: {e}")
             return {"success": False, "error": str(e)}
 
+    def generate_ai_pipeline(self, prompt: str, test_name: str = None) -> Dict:
+        """
+        根据自然语言提示词生成 Pipeline JSON 配置文件
+        
+        Args:
+            prompt: 自然语言测试描述
+            test_name: 测试名称（可选）
+            
+        Returns:
+            生成结果，包含文件路径和内容
+        """
+        try:
+            return self.visual_agent.generate_pipeline_json(prompt, test_name)
+        except Exception as e:
+            logger.error(f"生成 Pipeline JSON 错误: {e}")
+            return {"success": False, "error": str(e)}
+
     # ==================== MAA 风格视觉识别 API ====================
 
     def find_template(

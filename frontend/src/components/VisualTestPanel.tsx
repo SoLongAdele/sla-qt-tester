@@ -8,7 +8,8 @@ import type {
   AiCommandResult, 
   VisualVerifyResult,
   PipelineTestFile,
-  PipelineTestResult
+  PipelineTestResult,
+  GeneratePipelineResult
 } from '../api/visual'
 
 type SubTab = 'pipeline' | 'ai'
@@ -322,6 +323,12 @@ function AiAutomationPanel() {
   const [aiResult, setAiResult] = useState<AiCommandResult | null>(null)
   const [verifyResult, setVerifyResult] = useState<VisualVerifyResult | null>(null)
   const [loading, setLoading] = useState(false)
+  
+  // Pipeline 生成相关状态
+  const [pipelinePrompt, setPipelinePrompt] = useState('')
+  const [testName, setTestName] = useState('')
+  const [pipelineResult, setPipelineResult] = useState<GeneratePipelineResult | null>(null)
+  const [generatingPipeline, setGeneratingPipeline] = useState(false)
 
   const setApiKeyHandler = async () => {
     if (!apiKey.trim()) {
@@ -375,6 +382,25 @@ function AiAutomationPanel() {
     }
   }
 
+  // 生成 Pipeline JSON
+  const generatePipeline = async () => {
+    if (!pipelinePrompt.trim()) {
+      alert('请输入测试场景描述')
+      return
+    }
+    setGeneratingPipeline(true)
+    setPipelineResult(null)
+    try {
+      const res = await visual.generateAiPipeline(pipelinePrompt.trim(), testName.trim() || undefined)
+      setPipelineResult(res)
+    } catch (error) {
+      console.error('生成 Pipeline 错误:', error)
+      setPipelineResult({ success: false, error: String(error) })
+    } finally {
+      setGeneratingPipeline(false)
+    }
+  }
+
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-gray-800 dark:text-white">AI 自动化测试</h3>
@@ -406,6 +432,136 @@ function AiAutomationPanel() {
             更换
           </button>
         </div>
+      </div>
+
+      {/* AI 生成 Pipeline JSON */}
+      <div className="p-4 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+        <h4 className="font-semibold text-purple-900 dark:text-purple-100 mb-3 text-sm flex items-center gap-2">
+          🧠 AI 生成 Pipeline 测试配置
+        </h4>
+        <p className="text-xs text-purple-700 dark:text-purple-300 mb-3">
+          用自然语言描述您的测试场景，AI 将自动生成 Pipeline JSON 配置文件并保存到 log 目录
+        </p>
+        
+        <div className="space-y-3">
+          {/* 测试名称（可选） */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+              测试名称（可选，用于生成文件名）
+            </label>
+            <input
+              type="text"
+              value={testName}
+              onChange={(e) => setTestName(e.target.value)}
+              placeholder='例如："登录测试"、"首页验证"'
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            />
+          </div>
+          
+          {/* 测试场景描述 */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+              测试场景描述 *
+            </label>
+            <textarea
+              value={pipelinePrompt}
+              onChange={(e) => setPipelinePrompt(e.target.value)}
+              placeholder={'请描述您的测试场景，例如：\n\n1. 点击登录按钮\n2. 等待页面加载\n3. 输入用户名和密码\n4. 验证登录成功后的界面'}
+              rows={4}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+            />
+          </div>
+          
+          <button
+            onClick={generatePipeline}
+            disabled={generatingPipeline || !pipelinePrompt.trim()}
+            className="w-full px-4 py-2.5 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-lg hover:from-purple-600 hover:to-indigo-600 disabled:opacity-50 text-sm font-medium transition-all flex items-center justify-center gap-2"
+          >
+            {generatingPipeline ? (
+              <>
+                <span className="animate-spin">⏳</span>
+                正在生成...
+              </>
+            ) : (
+              <>
+                ✨ 生成 Pipeline JSON
+              </>
+            )}
+          </button>
+        </div>
+        
+        {/* Pipeline 生成结果 */}
+        {pipelineResult && (
+          <div className={`mt-4 p-4 rounded-lg border ${
+            pipelineResult.success
+              ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+              : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+          }`}>
+            <h5 className={`font-semibold mb-2 text-sm flex items-center gap-2 ${
+              pipelineResult.success
+                ? 'text-green-900 dark:text-green-100'
+                : 'text-red-900 dark:text-red-100'
+            }`}>
+              {pipelineResult.success ? '✅ 生成成功' : '❌ 生成失败'}
+            </h5>
+            
+            {pipelineResult.success && (
+              <div className="space-y-2 text-sm">
+                <p className="text-gray-700 dark:text-gray-300">
+                  <span className="font-medium">📁 文件名：</span>
+                  <code className="ml-1 px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-xs">
+                    {pipelineResult.filename}
+                  </code>
+                </p>
+                <p className="text-gray-700 dark:text-gray-300">
+                  <span className="font-medium">📍 路径：</span>
+                  <code className="ml-1 px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-xs break-all">
+                    {pipelineResult.file_path}
+                  </code>
+                </p>
+                <p className="text-gray-700 dark:text-gray-300">
+                  <span className="font-medium">🔢 节点数：</span>
+                  {pipelineResult.node_count}
+                </p>
+                {pipelineResult.entry_nodes && pipelineResult.entry_nodes.length > 0 && (
+                  <p className="text-gray-700 dark:text-gray-300">
+                    <span className="font-medium">🚀 入口节点：</span>
+                    <code className="ml-1 px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-xs">
+                      {pipelineResult.entry_nodes[0]}
+                    </code>
+                  </p>
+                )}
+                
+                {/* 展开查看 JSON 内容 */}
+                {pipelineResult.pipeline_config && (
+                  <details className="mt-3">
+                    <summary className="cursor-pointer text-sm font-medium text-purple-700 dark:text-purple-300 hover:text-purple-900 dark:hover:text-purple-100">
+                      📄 查看生成的 JSON 配置
+                    </summary>
+                    <pre className="mt-2 p-3 bg-gray-900 text-gray-100 rounded text-xs overflow-x-auto max-h-64 overflow-y-auto">
+                      {JSON.stringify(pipelineResult.pipeline_config, null, 2)}
+                    </pre>
+                  </details>
+                )}
+              </div>
+            )}
+            
+            {pipelineResult.error && (
+              <p className="text-sm text-red-800 dark:text-red-200">{pipelineResult.error}</p>
+            )}
+            
+            {pipelineResult.raw_response && (
+              <details className="mt-2">
+                <summary className="cursor-pointer text-xs text-gray-500 dark:text-gray-400">
+                  查看原始响应
+                </summary>
+                <pre className="mt-1 p-2 bg-gray-800 text-gray-300 rounded text-xs overflow-x-auto">
+                  {pipelineResult.raw_response}
+                </pre>
+              </details>
+            )}
+          </div>
+        )}
       </div>
 
       {/* AI 指令执行 */}
