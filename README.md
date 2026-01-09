@@ -2,7 +2,75 @@
 
 > 本应用开发中！尚未完成所有功能，无法用于正式环境
 
-⚙️ **SLA Qt Tester** - Qt 可视化测试工具
+⚙️ **SLA Qt Tester** - 智能视觉驱动的 Qt 测试平台
+
+## 功能矩阵
+
+| 功能分类 | 功能描述 | 功能细节 |
+|:---------|:---------|:---------|
+| **项目管理** | Qt 项目扫描 | 自动扫描识别 QMake (.pro) 和 CMake 项目，提取项目信息 |
+| | 文件浏览器 | 树形结构展示项目文件，支持 VS Code 风格图标 |
+| | 文件预览 | Shiki 语法高亮，支持 C++/CMake/JSON 等，行号显示与行高亮跳转 |
+| **单元测试** | 测试扫描 | 扫描 `tests/` 目录下 `test_*.cpp` 文件，解析测试用例 |
+| | 测试执行 | 运行单个/批量测试，支持 Qt Test 框架输出解析 |
+| | UI 测试录制 | 自动截图记录 UI 测试过程，截图存入数据库 |
+| | AI 失败分析 | 调用讯飞星火 AI 分析失败原因，生成修复建议 |
+| **静态分析** | Cppcheck 集成 | 自动检测/安装 cppcheck，支持一键分析 |
+| | 检查类型配置 | 7 种检查类型可选：warning/style/performance/portability 等 |
+| | 高级参数 | 支持并行线程、目标平台、C++ 标准等配置 |
+| | 问题定位 | 按严重程度/类型分类，双击跳转代码位置并高亮 |
+| **视觉测试** | 模板匹配 | OpenCV 模板匹配，支持阈值和 ROI 区域设置 |
+| | 颜色匹配 | HSV 颜色空间匹配，支持颜色范围和最小像素数 |
+| | Pipeline 引擎 | JSON 配置驱动的测试流水线，支持条件分支和循环 |
+| | AI 自动化 | 自然语言生成 Pipeline 配置，AI 驱动测试执行 |
+| **历史记录** | 测试历史 | 项目级/全局历史记录，含用例详情和截图 |
+| | 批量操作 | 多选删除、HTML 报告导出 |
+| | AI 报告存档 | AI 分析结果持久化，支持 Markdown 渲染查看 |
+
+## 核心模块技术栈
+
+### 🧪 单元测试集成
+
+| 层级 | 技术实现 |
+|:-----|:---------|
+| 前端 | React 组件 (`UnitTestPanel.tsx`) + TypeScript API 封装 |
+| 通信 | PyWebView JS Bridge 异步 RPC 调用 |
+| 后端 | Python 测试扫描器 + Qt Test 输出解析器 |
+| 数据 | SQLite 数据库存储运行记录、用例详情、截图 |
+| AI | 讯飞星火 API 进行失败原因分析 |
+
+### 🔍 静态代码分析
+
+| 层级 | 技术实现 |
+|:-----|:---------|
+| 前端 | React 配置面板 + 问题列表/详情双栏布局 |
+| 工具 | Cppcheck 静态分析器，XML 格式输出解析 |
+| 后端 | Python 封装 cppcheck 命令行调用，结果分类统计 |
+| 交互 | 问题位置 → 文件预览行高亮跳转 |
+
+### 🎯 视觉测试引擎
+
+| 层级 | 技术实现 |
+|:-----|:---------|
+| 识别 | OpenCV 模板匹配 + HSV 颜色匹配 |
+| 控制 | pyautogui 鼠标键盘模拟 |
+| 流程 | Pipeline JSON 配置引擎，支持节点跳转和条件分支 |
+| AI | 讯飞星火 API 自然语言 → Pipeline JSON 生成 |
+
+### 📚 历史记录管理
+
+| 层级 | 技术实现 |
+|:-----|:---------|
+| 存储 | SQLite 三表结构：test_runs / test_case_details / test_screenshots |
+| 查询 | 支持项目筛选、分页、统计聚合 |
+| 导出 | HTML 模板渲染，含测试详情和 Base64 截图 |
+| 清理 | 定时清理过期记录 |
+
+## 视觉测试技术文档
+
+- [Pipeline 用户指南](core/vision/PIPELINE_USER_GUIDE.md) - Pipeline JSON 配置语法与使用说明
+- [技术实现详解](core/vision/TECHNICAL_IMPLEMENTATION.md) - 视觉识别算法与架构设计
+- [视觉模块概述](core/vision/README.md) - 模块结构与 API 说明
 
 ## 快速开始
 
@@ -158,7 +226,6 @@ pyinstaller --name="PyWebViewApp" \
 # 输出在 dist/PyWebViewApp.app (macOS)
 ```
 
-## 开发人员
-
-- [YueZheng-Sea-angle](https://github.com/YueZheng-Sea-angle)
+## 致谢
+- [MAA](https://maa.plus)
 - [Elecmonkey](https://www.elecmonkey.com)
